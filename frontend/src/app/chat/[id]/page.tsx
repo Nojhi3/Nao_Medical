@@ -10,6 +10,15 @@ function fmtDate(value: string): string {
   return dt.toLocaleString();
 }
 
+function isFallbackTranslation(msg: Message): boolean {
+  if (msg.modality !== "text") {
+    return false;
+  }
+  const original = (msg.original_text || "").trim();
+  const translated = (msg.translated_text || "").trim();
+  return Boolean(original) && original === translated;
+}
+
 export default function ChatPage() {
   const params = useParams<{ id: string }>();
   const searchParams = useSearchParams();
@@ -253,6 +262,11 @@ export default function ChatPage() {
               {msg.original_text ? <p><strong>Original:</strong> {msg.original_text}</p> : null}
               {msg.transcript_text ? <p><strong>Transcript:</strong> {msg.transcript_text}</p> : null}
               {msg.translated_text ? <p><strong>Translated:</strong> {msg.translated_text}</p> : null}
+              {isFallbackTranslation(msg) ? (
+                <p className="fallback-note">
+                  Translation fallback used (provider unavailable/rate-limited).
+                </p>
+              ) : null}
               {msg.audio_url ? (
                 <audio controls preload="none" style={{ width: "100%" }}>
                   <source src={msg.audio_url} type="audio/webm" />

@@ -121,6 +121,12 @@ a {
   font-size: 13px;
 }
 
+.fallback-note {
+  color: #8a4b00;
+  font-size: 12px;
+  margin-top: 6px;
+}
+
 @media (max-width: 768px) {
   .grid-2 {
     grid-template-columns: 1fr;

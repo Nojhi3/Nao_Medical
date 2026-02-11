@@ -1,40 +1,41 @@
 # Nao Medical - Doctor-Patient Translation Bridge
 
-A full-stack web application that enables doctor-patient communication across languages using translated text and recorded audio.
+A full-stack web app that supports multilingual doctor-patient communication with text/audio messaging, search, and AI summaries.
 
-## Project Overview
+## Status Update
 
-This app provides a near real-time translation workflow between two roles:
-- Doctor
-- Patient
+Working now:
+- Doctor/Patient role-based conversation workflow
+- Conversation creation and persistence
+- Text message send/receive with polling-based updates
+- Search across conversation logs
+- Summary generation endpoint and UI
+- Audio recording/upload/finalize flow scaffolded
 
-Users can type or record messages, view translated outputs, search conversation history, and generate AI-assisted medical summaries.
+Important current behavior:
+- AI provider is now configurable (`AI_PROVIDER=groq` or `gemini`).
+- If translation provider fails/rate-limits, text messages still save and display.
+- UI marks fallback messages with: `Translation fallback used (provider unavailable/rate-limited).`
 
 ## Features
 
 Implemented:
-- Role-based conversation flow (Doctor/Patient)
-- Language selection (8 supported languages)
-- Text translation pipeline (Gemini)
-- Audio recording in browser (`audio/webm`)
-- Presigned upload flow to S3-compatible storage
-- Audio transcription + translation pipeline (Gemini)
-- Persistent conversation/message storage
-- Polling-based near real-time updates (`after_id` cursor)
-- Search endpoint with PostgreSQL FTS (and SQLite fallback contains-search)
-- Summary generation with structured sections:
-  - symptoms
-  - diagnoses
-  - medications
-  - follow_up
-- Mobile-friendly responsive UI
+- Two roles: Doctor and Patient
+- Language selection (8 languages)
+- Text messaging + translated output field
+- Polling cursor semantics (`after_id`)
+- Audio recording (`audio/webm`) and playable clips in thread
+- Conversation persistence in SQL database
+- Search endpoint + search page with context/highlight
+- AI summary extraction (`symptoms`, `diagnoses`, `medications`, `follow_up`)
+- Mobile-friendly interface
 
-Known limitations / tradeoffs:
-- No authentication (assignment scope)
-- Polling (2s) instead of WebSockets to reduce complexity risk
-- Only `audio/webm` supported
-- Summary JSON parsing is intentionally minimal (MVP)
-- PostgreSQL FTS works best in production; local SQLite uses fallback text contains
+Known limitations/tradeoffs:
+- No authentication (scope/timebox choice)
+- Polling instead of WebSocket
+- Audio requires S3-compatible bucket config
+- Provider fallback may store original text as translated text when AI is unavailable
+- Local SQLite used for fast development; Postgres recommended for production
 
 ## Tech Stack
 
@@ -46,64 +47,36 @@ Backend:
 - FastAPI
 - SQLAlchemy
 - Pydantic Settings
-- Boto3 (S3 presign/upload support)
 - HTTPX
+- Boto3 (S3 presigned uploads)
 
-AI:
-- Gemini API (translation, transcription, summary)
-
-Data & Storage:
-- PostgreSQL (target production DB)
-- SQLite (local default for quick startup)
-- S3-compatible object storage for audio
-
-Deployment target:
-- Frontend: Vercel
-- Backend + DB: Render
-
-## Repository Structure
-
-```text
-.
-|- backend/
-|  |- app/
-|  |  |- main.py
-|  |  |- models.py
-|  |  |- schemas.py
-|  |  |- services/
-|  |     |- gemini.py
-|  |     |- storage.py
-|  |- .env.example
-|- frontend/
-|  |- src/app/
-|  |  |- page.tsx
-|  |  |- chat/[id]/page.tsx
-|  |  |- search/page.tsx
-|  |- src/lib/api.ts
-|- requirements.txt
-|- README.md
-```
+AI providers:
+- Groq (current primary)
+- Gemini (optional)
 
 ## Local Setup
 
-## 1) Prerequisites
+Prerequisites:
 - Python 3.12+
 - Node.js 18+
-- npm
 
-## 2) Backend setup
-From repo root:
+1) Backend
 
 ```powershell
+cd d:\nao_medical
 .\env\Scripts\activate
 pip install -r requirements.txt
 Copy-Item backend\.env.example backend\.env
 ```
 
-Fill `backend/.env`:
-- `AI_PROVIDER=gemini`
-- `GEMINI_API_KEY=<your_key>`
-- DB + S3 values for full functionality
+Set key env values in `backend/.env`:
+
+```env
+AI_PROVIDER=groq
+GROQ_API_KEY=your_key
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+DATABASE_URL=sqlite:///D:/nao_medical/nao_medical.db
+```
 
 Run backend:
 
@@ -111,21 +84,22 @@ Run backend:
 python -m uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-## 3) Frontend setup
+2) Frontend
 
 ```powershell
-cd frontend
+cd d:\nao_medical\frontend
 npm install
 Copy-Item .env.local.example .env.local
 npm run dev
 ```
 
-Set `frontend/.env.local`:
-- `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000`
+Ensure `frontend/.env.local` contains:
 
-Frontend runs on `http://localhost:3000`.
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+```
 
-## API Summary
+## API Overview
 
 - `POST /api/conversations`
 - `GET /api/conversations/{id}`
@@ -136,21 +110,23 @@ Frontend runs on `http://localhost:3000`.
 - `GET /api/search?q=<query>&conversation_id=<optional>`
 - `POST /api/conversations/{id}/summary`
 
-## Polling Semantics
+## Deployment Checklist
 
-- Client polls every 2 seconds.
-- Cursor uses `after_id` (UUID), not timestamp.
-- Server returns messages ordered by `(created_at ASC, id ASC)`.
-- Invalid cursor returns `400 invalid_cursor`.
-- Frontend backs off to 4s polling after repeated failures.
+Backend (Render):
+- Deploy FastAPI service
+- Set backend env vars (`AI_PROVIDER`, provider keys, DB, CORS, S3)
 
-## AI Tools / Resources Leveraged
+Frontend (Vercel):
+- Deploy Next.js app from `frontend/`
+- Set `NEXT_PUBLIC_API_BASE_URL` to deployed backend URL
 
-- Gemini API for:
-  - text translation
-  - audio transcription
-  - structured conversation summarization
+Smoke tests after deploy:
+- Create conversation
+- Send doctor message, see on patient tab
+- Search keyword
+- Generate summary
+- Verify fallback indicator if provider quota is exhausted
 
-## Submission Notes
+## Security Note
 
-This implementation is intentionally lean to maximize reliability under a 12-hour assignment window while preserving strong full-stack and AI-integration hiring signal.
+Do not commit real API keys. Rotate any key that has been exposed during development.
