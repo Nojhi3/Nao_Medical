@@ -7,12 +7,15 @@ A full-stack healthcare communication app that helps a doctor and patient chat a
 - Frontend (Vercel): `https://nao-medical-five.vercel.app`
 - Backend (Render): `https://nao-medical-t187.onrender.com`
 - Repository: `https://github.com/Nojhi3/Nao_Medical`
-- Example conversation: patient: `https://nao-medical-five.vercel.app/chat/4d4667f0-ad8a-4d34-ab50-799655f7155b?role=patient`
-- Example conversation: doctor: `https://nao-medical-five.vercel.app/chat/4d4667f0-ad8a-4d34-ab50-799655f7155b?role=doctor`
 
 ## Project Overview
 
 This project was built as a time-boxed MVP to satisfy the assignment requirements while prioritizing reliability and deployability.
+
+## Screenshots
+
+![Application Screenshot 1](frontend/public/ss1.png)
+![Application Screenshot 2](frontend/public/ss2.png)
 
 Core capabilities include:
 - Role-based chat (Doctor and Patient)
@@ -161,4 +164,3 @@ CORS_ORIGINS=https://nao-medical-five.vercel.app,https://www.nao-medical-five.ve
 - Record and play audio message
 - Run search query and verify highlighted result
 - Generate summary and verify extracted sections
-
