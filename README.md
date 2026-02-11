@@ -5,8 +5,10 @@ A full-stack healthcare communication app that helps a doctor and patient chat a
 ## Live Links
 
 - Frontend (Vercel): `https://nao-medical-five.vercel.app`
-- Backend (Render): `ADD_RENDER_BACKEND_URL_HERE`
+- Backend (Render): `https://nao-medical-t187.onrender.com`
 - Repository: `https://github.com/Nojhi3/Nao_Medical`
+-Example conversation: patient: `https://nao-medical-five.vercel.app/chat/4d4667f0-ad8a-4d34-ab50-799655f7155b?role=patient`
+-Example conversation: patient: `https://nao-medical-five.vercel.app/chat/4d4667f0-ad8a-4d34-ab50-799655f7155b?role=doctor`
 
 ## Project Overview
 
