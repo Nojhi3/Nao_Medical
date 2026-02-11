@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, Suspense, useMemo, useState } from "react";
 import { api } from "@/lib/api";
 
 type SearchItem = {
@@ -21,7 +21,7 @@ function mark(text: string, needle: string): string {
   return text.replace(new RegExp(`(${escaped})`, "ig"), "<mark>$1</mark>");
 }
 
-export default function SearchPage() {
+function SearchPageInner() {
   const params = useSearchParams();
   const defaultConversation = params.get("conversation_id") || "";
 
@@ -101,5 +101,13 @@ export default function SearchPage() {
         )}
       </section>
     </main>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<main className="container">Loading search...</main>}>
+      <SearchPageInner />
+    </Suspense>
   );
 }
