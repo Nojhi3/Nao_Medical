@@ -105,6 +105,15 @@ mark {
   border-color: var(--border);
 }
 
+.top-action-btn {
+  min-width: 120px;
+  height: 48px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
 .messages {
   display: flex;
   flex-direction: column;

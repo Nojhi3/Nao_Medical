@@ -270,16 +270,16 @@ export default function ChatPage() {
             <code className="mono">{conversationId}</code>
           </div>
           <div className="row wrap">
-            <Link className="button secondary" href={`/search?conversation_id=${conversationId}`}>
+            <Link className="button secondary top-action-btn" href={`/search?conversation_id=${conversationId}`}>
               Search
             </Link>
-            <button className="button ghost" onClick={() => copyRoleLink(role)}>
-              {copied === role ? "Copied" : `Copy ${role} link`}
+            <button className="button ghost top-action-btn" onClick={() => copyRoleLink(role)}>
+              {copied === role ? "Copied" : `Copy ${role}`}
             </button>
-            <button className="button ghost" onClick={() => copyRoleLink(alternateRole)}>
-              {copied === alternateRole ? "Copied" : `Copy ${alternateRole} link`}
+            <button className="button ghost top-action-btn" onClick={() => copyRoleLink(alternateRole)}>
+              {copied === alternateRole ? "Copied" : `Copy ${alternateRole}`}
             </button>
-            <button className="button secondary" onClick={() => router.push("/")}>Exit</button>
+            <button className="button secondary top-action-btn" onClick={() => router.push("/")}>Exit</button>
           </div>
         </div>
 
