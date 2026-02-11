@@ -1,12 +1,15 @@
 :root {
-  --bg: #f7fafc;
-  --card: #ffffff;
-  --ink: #1f2937;
-  --muted: #6b7280;
-  --border: #d9e2ec;
-  --doctor: #e7f0ff;
-  --patient: #e9fff2;
-  --accent: #0f766e;
+  --bg: #05070c;
+  --bg-soft: #0a1020;
+  --card: #121829;
+  --card-elevated: #171f34;
+  --ink: #e7ebf5;
+  --muted: #9aa7c3;
+  --border: #2a3552;
+  --doctor: #0f2e4a;
+  --patient: #0e3b2a;
+  --accent: #2dd4bf;
+  --accent-strong: #14b8a6;
 }
 
 * {
@@ -16,7 +19,10 @@
 body {
   margin: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(120deg, #f0f7ff, #f8fffb);
+  background:
+    radial-gradient(900px 420px at 0% 0%, #12203c 0%, transparent 65%),
+    radial-gradient(700px 360px at 100% 0%, #1f2c4d 0%, transparent 65%),
+    linear-gradient(180deg, var(--bg-soft), var(--bg));
   color: var(--ink);
 }
 
@@ -25,17 +31,33 @@ a {
   text-decoration: none;
 }
 
+mark {
+  background: rgba(45, 212, 191, 0.25);
+  color: #d8fff9;
+  border-radius: 3px;
+  padding: 0 2px;
+}
+
 .container {
-  max-width: 960px;
+  max-width: 980px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 18px;
 }
 
 .card {
-  background: var(--card);
+  background: linear-gradient(180deg, var(--card), var(--card-elevated));
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.22);
+}
+
+.hero {
+  border-color: #335084;
+}
+
+.info-block {
+  background: rgba(11, 17, 33, 0.8);
 }
 
 .row {
@@ -59,18 +81,27 @@ a {
   border-radius: 10px;
   padding: 10px 12px;
   font-size: 14px;
+  background: #0d1426;
+  color: var(--ink);
 }
 
 .button {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+  background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+  border-color: #0d9387;
+  color: #01221f;
+  font-weight: 700;
   cursor: pointer;
 }
 
 .button.secondary {
-  background: #fff;
+  background: #0e162a;
   color: var(--ink);
+  border-color: var(--border);
+}
+
+.button.ghost {
+  background: transparent;
+  color: var(--muted);
   border-color: var(--border);
 }
 
@@ -85,15 +116,31 @@ a {
 .msg {
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 10px;
+  padding: 12px;
 }
 
 .msg.doctor {
-  background: var(--doctor);
+  background: linear-gradient(180deg, rgba(15, 46, 74, 0.7), rgba(15, 46, 74, 0.45));
 }
 
 .msg.patient {
-  background: var(--patient);
+  background: linear-gradient(180deg, rgba(14, 59, 42, 0.65), rgba(14, 59, 42, 0.42));
+}
+
+.msg-main {
+  margin: 0 0 8px;
+}
+
+.details-box {
+  border-top: 1px dashed rgba(154, 167, 195, 0.4);
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
+.details-box summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .msg-meta {
@@ -114,15 +161,27 @@ a {
   border-radius: 999px;
   border: 1px solid var(--border);
   font-size: 12px;
+  background: rgba(14, 22, 42, 0.8);
+}
+
+.mono {
+  font-family: Consolas, Monaco, "Courier New", monospace;
+  font-size: 12px;
+  color: #a5f3fc;
+  overflow-wrap: anywhere;
+}
+
+.muted {
+  color: var(--muted);
 }
 
 .error {
-  color: #b91c1c;
+  color: #fda4af;
   font-size: 13px;
 }
 
 .fallback-note {
-  color: #8a4b00;
+  color: #fbbf24;
   font-size: 12px;
   margin-top: 6px;
 }

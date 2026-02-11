@@ -19,6 +19,20 @@ function isFallbackTranslation(msg: Message): boolean {
   return Boolean(original) && original === translated;
 }
 
+function displayTextForViewer(msg: Message, viewerRole: Role): string {
+  const isOwn = msg.role === viewerRole;
+  if (msg.modality === "audio") {
+    if (isOwn) {
+      return msg.transcript_text || "[Audio message]";
+    }
+    return msg.translated_text || msg.transcript_text || "[Audio message]";
+  }
+  if (isOwn) {
+    return msg.original_text || msg.transcript_text || "";
+  }
+  return msg.translated_text || msg.original_text || msg.transcript_text || "";
+}
+
 export default function ChatPage() {
   const params = useParams<{ id: string }>();
   const searchParams = useSearchParams();
@@ -39,6 +53,7 @@ export default function ChatPage() {
 
   const [recording, setRecording] = useState(false);
   const [uploadingAudio, setUploadingAudio] = useState(false);
+  const [copied, setCopied] = useState<"" | "doctor" | "patient">("");
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -49,6 +64,7 @@ export default function ChatPage() {
 
   const sourceLanguage = useMemo(() => (role === "doctor" ? conversation?.doctor_language : conversation?.patient_language), [role, conversation]);
   const targetLanguage = useMemo(() => (role === "doctor" ? conversation?.patient_language : conversation?.doctor_language), [role, conversation]);
+  const alternateRole: Role = role === "doctor" ? "patient" : "doctor";
 
   useEffect(() => {
     let mounted = true;
@@ -226,6 +242,13 @@ export default function ChatPage() {
     }
   };
 
+  const copyRoleLink = async (pickedRole: Role) => {
+    const url = `${window.location.origin}/chat/${conversationId}?role=${pickedRole}`;
+    await navigator.clipboard.writeText(url);
+    setCopied(pickedRole);
+    window.setTimeout(() => setCopied(""), 1200);
+  };
+
   if (loading) {
     return <main className="container">Loading conversation...</main>;
   }
@@ -244,11 +267,18 @@ export default function ChatPage() {
             <span className="badge">
               {conversation.doctor_language} -&gt; {conversation.patient_language}
             </span>
+            <code className="mono">{conversationId}</code>
           </div>
           <div className="row wrap">
             <Link className="button secondary" href={`/search?conversation_id=${conversationId}`}>
               Search
             </Link>
+            <button className="button ghost" onClick={() => copyRoleLink(role)}>
+              {copied === role ? "Copied" : `Copy ${role} link`}
+            </button>
+            <button className="button ghost" onClick={() => copyRoleLink(alternateRole)}>
+              {copied === alternateRole ? "Copied" : `Copy ${alternateRole} link`}
+            </button>
             <button className="button secondary" onClick={() => router.push("/")}>Exit</button>
           </div>
         </div>
@@ -259,9 +289,22 @@ export default function ChatPage() {
               <div className="msg-meta">
                 {msg.role} | {msg.modality} | {fmtDate(msg.created_at)}
               </div>
-              {msg.original_text ? <p><strong>Original:</strong> {msg.original_text}</p> : null}
-              {msg.transcript_text ? <p><strong>Transcript:</strong> {msg.transcript_text}</p> : null}
-              {msg.translated_text ? <p><strong>Translated:</strong> {msg.translated_text}</p> : null}
+              <p className="msg-main">
+                <strong>{msg.role === role ? "Sent:" : "Received:"}</strong>{" "}
+                {displayTextForViewer(msg, role)}
+              </p>
+              <details className="details-box">
+                <summary>View Original / Translated</summary>
+                {msg.original_text ? (
+                  <p><strong>Original ({msg.source_language}):</strong> {msg.original_text}</p>
+                ) : null}
+                {msg.transcript_text ? (
+                  <p><strong>Transcript ({msg.source_language}):</strong> {msg.transcript_text}</p>
+                ) : null}
+                {msg.translated_text ? (
+                  <p><strong>Translated ({msg.target_language}):</strong> {msg.translated_text}</p>
+                ) : null}
+              </details>
               {isFallbackTranslation(msg) ? (
                 <p className="fallback-note">
                   Translation fallback used (provider unavailable/rate-limited).
