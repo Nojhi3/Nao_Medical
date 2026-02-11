@@ -72,7 +72,7 @@ Prerequisites:
 cd d:\nao_medical
 .\env\Scripts\activate
 pip install -r requirements.txt
-Copy-Item backend\.env.example backend\.env
+#initalize env file
 python -m uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -81,7 +81,7 @@ python -m uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
 ```powershell
 cd d:\nao_medical\frontend
 npm install
-Copy-Item .env.local.example .env.local
+#initalize env file
 npm run dev
 ```
 
@@ -154,7 +154,7 @@ CORS_ORIGINS=https://nao-medical-five.vercel.app,https://www.nao-medical-five.ve
 - Groq API (translation, summarization, transcription)
 - Gemini API (optional provider path)
 
-## Final Smoke Checklist
+## Final Checklist
 
 - Create conversation and open doctor/patient links
 - Send text both directions
@@ -162,6 +162,3 @@ CORS_ORIGINS=https://nao-medical-five.vercel.app,https://www.nao-medical-five.ve
 - Run search query and verify highlighted result
 - Generate summary and verify extracted sections
 
-## Security Note
-
-Do not commit real API keys. Rotate any key exposed during development or testing.
