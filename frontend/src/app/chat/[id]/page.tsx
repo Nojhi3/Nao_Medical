@@ -304,16 +304,16 @@ export default function ChatPage() {
                 {msg.translated_text ? (
                   <p><strong>Translated ({msg.target_language}):</strong> {msg.translated_text}</p>
                 ) : null}
+                {msg.audio_url ? (
+                  <audio controls preload="none" style={{ width: "100%" }}>
+                    <source src={msg.audio_url} type="audio/webm" />
+                  </audio>
+                ) : null}
               </details>
               {isFallbackTranslation(msg) ? (
                 <p className="fallback-note">
                   Translation fallback used (provider unavailable/rate-limited).
                 </p>
-              ) : null}
-              {msg.audio_url ? (
-                <audio controls preload="none" style={{ width: "100%" }}>
-                  <source src={msg.audio_url} type="audio/webm" />
-                </audio>
               ) : null}
             </article>
           ))}
