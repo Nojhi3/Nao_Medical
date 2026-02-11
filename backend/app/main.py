@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-import json
-from datetime import datetime
-
 import httpx
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import and_, func, or_, select, text
+from sqlalchemy import and_, or_, select, text
 from sqlalchemy.orm import Session
 
 from .config import settings
@@ -27,7 +24,7 @@ from .schemas import (
     SummaryOut,
     TextMessageCreate,
 )
-from .services.gemini import GeminiProvider
+from .services.provider_factory import get_ai_provider
 from .services.storage import StorageService
 
 app = FastAPI(title=settings.app_name)
@@ -142,8 +139,13 @@ async def send_text(payload: TextMessageCreate, db: Session = Depends(get_db)) -
     if not db.get(Conversation, payload.conversation_id):
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-    provider = GeminiProvider()
-    translated = await provider.translate(payload.text, payload.source_language, payload.target_language)
+    # Fail-open fallback for demo reliability: if provider fails/rate-limits,
+    # still persist and return the message so chat flow is not blocked.
+    try:
+        provider = get_ai_provider()
+        translated = await provider.translate(payload.text, payload.source_language, payload.target_language)
+    except Exception:
+        translated = payload.text
 
     row = Message(
         conversation_id=payload.conversation_id,
@@ -196,9 +198,15 @@ async def finalize_audio(payload: AudioFinalizeIn, db: Session = Depends(get_db)
     if len(audio_bytes) > max_bytes:
         raise HTTPException(status_code=400, detail="Audio file too large")
 
-    provider = GeminiProvider()
-    transcript = await provider.transcribe_audio(audio_bytes, "audio/webm", payload.source_language)
-    translated = await provider.translate(transcript, payload.source_language, payload.target_language)
+    # Fail-open fallback for demo reliability: keep audio message in thread
+    # even if AI transcription/translation is temporarily unavailable.
+    try:
+        provider = get_ai_provider()
+        transcript = await provider.transcribe_audio(audio_bytes, "audio/webm", payload.source_language)
+        translated = await provider.translate(transcript, payload.source_language, payload.target_language)
+    except Exception:
+        transcript = "[Transcription unavailable]"
+        translated = transcript
 
     row = Message(
         conversation_id=payload.conversation_id,
@@ -301,11 +309,18 @@ async def summarize(conversation_id: str, payload: SummaryIn, db: Session = Depe
         lines.append(f"[{msg.role}] original: {source}")
         lines.append(f"[{msg.role}] translated: {translated}")
 
-    provider = GeminiProvider()
     try:
+        provider = get_ai_provider()
         parsed = await provider.summarize_medical(lines, payload.style)
     except ValueError:
         raise HTTPException(status_code=502, detail="summary_parse_failed")
+    except RuntimeError as exc:
+        detail = str(exc)
+        if detail.endswith("_rate_limited"):
+            raise HTTPException(status_code=429, detail=detail)
+        raise HTTPException(status_code=502, detail=detail)
+    except Exception:
+        raise HTTPException(status_code=502, detail="gemini_unexpected_error")
 
     row = Summary(
         conversation_id=conversation_id,

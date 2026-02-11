@@ -22,8 +22,16 @@ class GeminiProvider:
             "generationConfig": {"temperature": 0.2},
         }
         async with httpx.AsyncClient(timeout=settings.ai_timeout_seconds) as client:
-            resp = await client.post(url, json=payload)
-            resp.raise_for_status()
+            try:
+                resp = await client.post(url, json=payload)
+            except httpx.RequestError as exc:
+                raise RuntimeError("gemini_request_failed") from exc
+            try:
+                resp.raise_for_status()
+            except httpx.HTTPStatusError as exc:
+                if exc.response.status_code == 429:
+                    raise RuntimeError("gemini_rate_limited") from exc
+                raise RuntimeError(f"gemini_http_{exc.response.status_code}") from exc
             data = resp.json()
 
         candidates = data.get("candidates") or []

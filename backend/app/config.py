@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import List
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BACKEND_ENV_PATH = Path(__file__).resolve().parents[1] / ".env"
 
 
 class Settings(BaseSettings):
@@ -13,11 +16,15 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite:///./nao_medical.db"
 
-    ai_provider: str = "gemini"
+    ai_provider: str = "groq"
     gemini_api_key: str = ""
     gemini_translation_model: str = "gemini-2.0-flash"
     gemini_summary_model: str = "gemini-2.0-flash"
     gemini_transcribe_model: str = "gemini-2.0-flash"
+    groq_api_key: str = ""
+    groq_translation_model: str = "llama-3.1-8b-instant"
+    groq_summary_model: str = "llama-3.3-70b-versatile"
+    groq_transcribe_model: str = "whisper-large-v3-turbo"
     ai_timeout_seconds: int = 20
 
     s3_endpoint_url: str = ""
@@ -30,7 +37,11 @@ class Settings(BaseSettings):
     max_audio_mb: int = 15
     allowed_audio_mime: str = "audio/webm"
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=(str(BACKEND_ENV_PATH), ".env"),
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
     @property
     def cors_origin_list(self) -> List[str]:
@@ -42,9 +53,6 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-
-if settings.ai_provider != "gemini":
-    raise RuntimeError("Only AI_PROVIDER=gemini is implemented for this MVP")
 
 if settings.app_env != "test":
     os.environ.setdefault("TZ", "UTC")
