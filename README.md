@@ -1,105 +1,53 @@
 # Nao Medical - Doctor-Patient Translation Bridge
 
-A full-stack web app that supports multilingual doctor-patient communication with text/audio messaging, search, and AI summaries.
+A full-stack healthcare communication app that helps a doctor and patient chat across languages with text/audio messages, searchable history, and AI-generated medical summaries.
 
-## Status Update
+## Live Links
 
-Working now:
-- Doctor/Patient role-based conversation workflow
-- Conversation creation and persistence
-- Text message send/receive with polling-based updates
-- Search across conversation logs
-- Summary generation endpoint and UI
-- Audio recording/upload/finalize flow scaffolded
+- Frontend (Vercel): `https://nao-medical-five.vercel.app`
+- Backend (Render): `ADD_RENDER_BACKEND_URL_HERE`
+- Repository: `https://github.com/Nojhi3/Nao_Medical`
 
-Important current behavior:
-- AI provider is now configurable (`AI_PROVIDER=groq` or `gemini`).
-- If translation provider fails/rate-limits, text messages still save and display.
-- UI marks fallback messages with: `Translation fallback used (provider unavailable/rate-limited).`
+## Project Overview
 
-## Features
+This project was built as a time-boxed MVP to satisfy the assignment requirements while prioritizing reliability and deployability.
 
-Implemented:
-- Two roles: Doctor and Patient
-- Language selection (8 languages)
-- Text messaging + translated output field
-- Polling cursor semantics (`after_id`)
-- Audio recording (`audio/webm`) and playable clips in thread
-- Conversation persistence in SQL database
-- Search endpoint + search page with context/highlight
-- AI summary extraction (`symptoms`, `diagnoses`, `medications`, `follow_up`)
-- Mobile-friendly interface
+Core capabilities include:
+- Role-based chat (Doctor and Patient)
+- Near real-time updates using polling
+- Text translation between selected languages
+- Browser audio recording + upload + playback
+- Persistent conversation history
+- Conversation search with highlighted matches
+- AI summary extraction of clinically important information
 
-Known limitations/tradeoffs:
-- No authentication (scope/timebox choice)
-- Polling instead of WebSocket
-- Audio requires S3-compatible bucket config
-- Provider fallback may store original text as translated text when AI is unavailable
-- Local SQLite used for fast development; Postgres recommended for production
+## Features Completed
 
-## Tech Stack
+- `Doctor` and `Patient` role flows
+- Conversation creation with role-specific shareable links
+- Text message send + translated view
+- Audio message recording (`audio/webm`) and in-thread playback
+- Persistent messages and summaries in database
+- Search endpoint + UI with context snippets
+- AI summary endpoint + UI (`symptoms`, `diagnoses`, `medications`, `follow_up`)
+- Mobile-friendly dark theme UI
+
+## Technical Design
 
 Frontend:
 - Next.js (App Router, TypeScript)
-- React
+- Polling with `after_id` cursor for near real-time updates
 
 Backend:
-- FastAPI
-- SQLAlchemy
-- Pydantic Settings
-- HTTPX
-- Boto3 (S3 presigned uploads)
+- FastAPI + SQLAlchemy
+- REST APIs for conversations/messages/audio/search/summary
+- S3-compatible presigned uploads for audio
 
-AI providers:
-- Groq (current primary)
-- Gemini (optional)
+AI:
+- Provider-configurable (`groq` primary, `gemini` optional)
+- Fail-open behavior for message continuity when provider is unavailable/rate-limited
 
-## Local Setup
-
-Prerequisites:
-- Python 3.12+
-- Node.js 18+
-
-1) Backend
-
-```powershell
-cd d:\nao_medical
-.\env\Scripts\activate
-pip install -r requirements.txt
-Copy-Item backend\.env.example backend\.env
-```
-
-Set key env values in `backend/.env`:
-
-```env
-AI_PROVIDER=groq
-GROQ_API_KEY=your_key
-CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
-DATABASE_URL=sqlite:///D:/nao_medical/nao_medical.db
-```
-
-Run backend:
-
-```powershell
-python -m uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-2) Frontend
-
-```powershell
-cd d:\nao_medical\frontend
-npm install
-Copy-Item .env.local.example .env.local
-npm run dev
-```
-
-Ensure `frontend/.env.local` contains:
-
-```env
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
-```
-
-## API Overview
+## API Endpoints
 
 - `POST /api/conversations`
 - `GET /api/conversations/{id}`
@@ -110,23 +58,108 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 - `GET /api/search?q=<query>&conversation_id=<optional>`
 - `POST /api/conversations/{id}/summary`
 
-## Deployment Checklist
+## Local Setup
+
+Prerequisites:
+- Python 3.12+
+- Node.js 18+
+
+1. Backend
+
+```powershell
+cd d:\nao_medical
+.\env\Scripts\activate
+pip install -r requirements.txt
+Copy-Item backend\.env.example backend\.env
+python -m uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+2. Frontend
+
+```powershell
+cd d:\nao_medical\frontend
+npm install
+Copy-Item .env.local.example .env.local
+npm run dev
+```
+
+3. Frontend env (`frontend/.env.local`)
+
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+```
+
+## Backend Environment Variables
+
+Minimum (Groq + local dev):
+
+```env
+APP_ENV=development
+DATABASE_URL=sqlite:///D:/nao_medical/nao_medical.db
+AI_PROVIDER=groq
+GROQ_API_KEY=...
+GROQ_TRANSLATION_MODEL=llama-3.1-8b-instant
+GROQ_SUMMARY_MODEL=llama-3.3-70b-versatile
+GROQ_TRANSCRIBE_MODEL=whisper-large-v3-turbo
+AI_TIMEOUT_SECONDS=20
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+```
+
+Audio/S3:
+
+```env
+S3_ENDPOINT_URL=https://s3.eu-north-1.amazonaws.com
+S3_BUCKET=nao-medical-audio-prod
+S3_REGION=eu-north-1
+S3_ACCESS_KEY_ID=...
+S3_SECRET_ACCESS_KEY=...
+S3_PUBLIC_BASE_URL=https://nao-medical-audio-prod.s3.eu-north-1.amazonaws.com
+MAX_AUDIO_MB=15
+ALLOWED_AUDIO_MIME=audio/webm
+```
+
+## Deployment
 
 Backend (Render):
-- Deploy FastAPI service
-- Set backend env vars (`AI_PROVIDER`, provider keys, DB, CORS, S3)
+- Build: `pip install -r requirements.txt`
+- Start: `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`
+- Set all backend env vars in Render
 
 Frontend (Vercel):
-- Deploy Next.js app from `frontend/`
-- Set `NEXT_PUBLIC_API_BASE_URL` to deployed backend URL
+- Root directory: `frontend`
+- Set env var:
 
-Smoke tests after deploy:
-- Create conversation
-- Send doctor message, see on patient tab
-- Search keyword
-- Generate summary
-- Verify fallback indicator if provider quota is exhausted
+```env
+NEXT_PUBLIC_API_BASE_URL=https://YOUR_RENDER_BACKEND_URL
+```
+
+- Update backend CORS after Vercel URL is known:
+
+```env
+CORS_ORIGINS=https://nao-medical-five.vercel.app,https://www.nao-medical-five.vercel.app
+```
+
+## Known Limitations / Tradeoffs
+
+- No authentication (assignment scope tradeoff)
+- Polling used instead of WebSockets
+- Audio restricted to `audio/webm`
+- Translation can fallback to original text if provider is unavailable/rate-limited
+- SQLite used for quick local setup; managed Postgres recommended for production
+
+## AI Tools and Resources Used
+
+- Groq API (translation, summarization, transcription)
+- Gemini API (optional provider path)
+
+## Final Smoke Checklist
+
+- Create conversation and open doctor/patient links
+- Send text both directions
+- Record and play audio message
+- Run search query and verify highlighted result
+- Generate summary and verify extracted sections
 
 ## Security Note
 
-Do not commit real API keys. Rotate any key that has been exposed during development.
+Do not commit real API keys. Rotate any key exposed during development or testing.
