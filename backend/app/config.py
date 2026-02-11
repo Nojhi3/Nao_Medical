@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+import os
+from typing import List
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,5 +32,19 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
+    @property
+    def cors_origin_list(self) -> List[str]:
+        return [item.strip() for item in self.cors_origins.split(",") if item.strip()]
+
+    @property
+    def allowed_audio_mime_list(self) -> List[str]:
+        return [item.strip() for item in self.allowed_audio_mime.split(",") if item.strip()]
+
 
 settings = Settings()
+
+if settings.ai_provider != "gemini":
+    raise RuntimeError("Only AI_PROVIDER=gemini is implemented for this MVP")
+
+if settings.app_env != "test":
+    os.environ.setdefault("TZ", "UTC")
