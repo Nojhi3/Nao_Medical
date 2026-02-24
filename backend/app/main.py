@@ -66,7 +66,17 @@ def message_to_out(row: Message) -> MessageOut:
 
 @app.on_event("startup")
 def startup() -> None:
+    settings.validate_required_settings()
     Base.metadata.create_all(bind=engine)
+
+
+@app.get("/")
+def root() -> dict:
+    return {
+        "name": settings.app_name,
+        "health": "/health",
+        "docs": "/docs",
+    }
 
 
 @app.get("/health")

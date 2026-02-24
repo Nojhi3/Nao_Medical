@@ -1,0 +1,70 @@
+name: Link Check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify links with curl
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          files=(
+            "README.md"
+            "frontend/README.md"
+            "ROADMAP.md"
+          )
+
+          if [ ! -f "ROADMAP.md" ]; then
+            files=(
+              "README.md"
+              "frontend/README.md"
+            )
+          fi
+
+          mapfile -t urls < <(grep -RhoE 'https?://[^[:space:]`")\],]+' "${files[@]}" | sort -u)
+
+          if [ "${#urls[@]}" -eq 0 ]; then
+            echo "No links found."
+            exit 0
+          fi
+
+          failed=0
+          for url in "${urls[@]}"; do
+            if [[ "$url" == *"localhost"* ]] || [[ "$url" == *"127.0.0.1"* ]] || [[ "$url" == *"YOUR_RENDER_BACKEND_URL"* ]]; then
+              echo "SKIP $url"
+              continue
+            fi
+
+            code="$(curl -L -s -o /dev/null -w "%{http_code}" --max-time 25 "$url" || true)"
+            if [[ "$code" == "404" ]] && [[ "$url" =~ ^https?://[^/]+/?$ ]]; then
+              health_url="${url%/}/health"
+              health_code="$(curl -L -s -o /dev/null -w "%{http_code}" --max-time 25 "$health_url" || true)"
+              if [[ "$health_code" =~ ^(200|201|202|204|301|302|307|308|401|403|405)$ ]]; then
+                echo "404(root) accepted via $health_code $health_url"
+                continue
+              fi
+            fi
+
+            echo "$code $url"
+
+            case "$code" in
+              200|201|202|204|301|302|307|308|401|403|405) ;;
+              *) failed=1 ;;
+            esac
+          done
+
+          if [ "$failed" -ne 0 ]; then
+            echo "One or more links failed validation."
+            exit 1
+          fi

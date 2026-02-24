@@ -5,7 +5,8 @@ A full-stack healthcare communication app that helps a doctor and patient chat a
 ## Live Links
 
 - Frontend (Vercel): `https://nao-medical-five.vercel.app`
-- Backend (Render): `https://nao-medical-t187.onrender.com`
+- Backend Health (Render): `https://nao-medical-t187.onrender.com/health`
+- Backend Docs (Render): `https://nao-medical-t187.onrender.com/docs`
 - Repository: `https://github.com/Nojhi3/Nao_Medical`
 
 ## Project Overview
@@ -75,7 +76,7 @@ Prerequisites:
 cd d:\nao_medical
 .\env\Scripts\activate
 pip install -r requirements.txt
-#initalize env file
+copy backend\.env.example backend\.env
 python -m uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -84,7 +85,7 @@ python -m uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
 ```powershell
 cd d:\nao_medical\frontend
 npm install
-#initalize env file
+copy .env.example .env.local
 npm run dev
 ```
 
@@ -135,13 +136,13 @@ Frontend (Vercel):
 - Set env var:
 
 ```env
-NEXT_PUBLIC_API_BASE_URL=https://YOUR_RENDER_BACKEND_URL
+NEXT_PUBLIC_API_BASE_URL=https://nao-medical-t187.onrender.com
 ```
 
 - Update backend CORS after Vercel URL is known:
 
 ```env
-CORS_ORIGINS=https://nao-medical-five.vercel.app,https://www.nao-medical-five.vercel.app
+CORS_ORIGINS=https://nao-medical-five.vercel.app
 ```
 
 ## Known Limitations / Tradeoffs

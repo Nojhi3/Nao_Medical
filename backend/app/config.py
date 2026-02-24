@@ -51,6 +51,38 @@ class Settings(BaseSettings):
     def allowed_audio_mime_list(self) -> List[str]:
         return [item.strip() for item in self.allowed_audio_mime.split(",") if item.strip()]
 
+    def validate_required_settings(self) -> None:
+        if self.ai_provider not in {"groq", "gemini"}:
+            raise RuntimeError("AI_PROVIDER must be 'groq' or 'gemini'")
+
+        strict_mode = self.app_env in {"staging", "production"}
+
+        if self.app_env != "test":
+            if not self.cors_origin_list:
+                raise RuntimeError("CORS_ORIGINS must contain at least one origin")
+            if not self.database_url:
+                raise RuntimeError("DATABASE_URL is required")
+
+        if strict_mode and self.ai_provider == "groq" and not self.groq_api_key:
+            raise RuntimeError("GROQ_API_KEY is required when AI_PROVIDER=groq")
+
+        if strict_mode and self.ai_provider == "gemini" and not self.gemini_api_key:
+            raise RuntimeError("GEMINI_API_KEY is required when AI_PROVIDER=gemini")
+
+        s3_values = [
+            self.s3_endpoint_url,
+            self.s3_bucket,
+            self.s3_region,
+            self.s3_access_key_id,
+            self.s3_secret_access_key,
+            self.s3_public_base_url,
+        ]
+        if any(s3_values) and not all(s3_values):
+            raise RuntimeError(
+                "S3 config is incomplete. Set S3_ENDPOINT_URL, S3_BUCKET, S3_REGION, "
+                "S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, and S3_PUBLIC_BASE_URL together."
+            )
+
 
 settings = Settings()
 
